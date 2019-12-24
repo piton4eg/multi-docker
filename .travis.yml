@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t piton4eg/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true piton4eg/react-test npm test
+
+after_success:
+  - docker build -t piton4eg/multi-client ./client
+  - docker build -t piton4eg/multi-nginx ./nginx
+  - docker build -t piton4eg/multi-server ./server
+  - docker build -t piton4eg/multi-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push piton4eg/multi-client
+  - docker push piton4eg/multi-nginx
+  - docker push piton4eg/multi-server
+  - docker push piton4eg/multi-worker
